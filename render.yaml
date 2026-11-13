@@ -1,0 +1,29 @@
+# Render Blueprint: creates the website and its PostgreSQL database together.
+# In Render choose New > Blueprint and point it at this repository.
+services:
+  - type: web
+    name: keithel
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    preDeployCommand: npm run db:migrate && node scripts/seed.mjs --from-env
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: keithel-db
+          property: connectionString
+      - key: ADMIN_PHONES
+        sync: false # Render asks you for this when you create the Blueprint
+      - key: NEXT_PUBLIC_SITE_URL
+        sync: false # Set to your Render address, for example https://keithel.onrender.com
+      - key: SEED_DEMO
+        value: "true" # adds the sample shops on deploy. Change to "remove" to delete them, then to "false".
+      - key: NODE_VERSION
+        value: 22
+
+databases:
+  - name: keithel-db
+    plan: free
+    databaseName: keithel
